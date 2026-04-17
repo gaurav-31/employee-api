@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Manager</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        .controls { margin-bottom: 20px; padding: 15px; background: #eee; border-radius: 5px; }
+        input { padding: 8px; margin-right: 10px; }
+        button { padding: 8px 15px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 3px; }
+        #searchBar { width: 100%; margin-bottom: 20px; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
+        ul { list-style: none; padding: 0; }
+        li { background: #f4f4f4; margin: 10px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .del-btn { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>Employee Directory</h1>
+    
+    <!-- Add/Create Section -->
+    <div class="controls">
+        <h3>Add New Employee</h3>
+        <input id="name" placeholder="Name">
+        <input id="role" placeholder="Role">
+        <button onclick="addEmployee()">Add Employee</button>
+    </div>
+
+    <!-- Search Section -->
+    <input type="text" id="searchBar" placeholder="Search by name or role..." onkeyup="filterEmployees()">
+
+    <ul id="employeeList"></ul>
+
+    <script>
+        let allEmployees = []; // Store the full list here for filtering
+
+        // Fetch employees from the API
+        async function loadEmployees() {
+            const res = await fetch('/employees');
+            allEmployees = await res.json();
+            renderList(allEmployees);
+        }
+
+        // Helper to display employees on the page
+        function renderList(data) {
+            const list = document.getElementById('employeeList');
+            list.innerHTML = data.map(emp => `
+                <li>
+                    <span><strong>${emp.name}</strong> - ${emp.role}</span>
+                    <button class="del-btn" onclick="deleteEmployee(${emp.id})">Delete</button>
+                </li>
+            `).join('');
+        }
+
+        // Filter the list as you type
+        function filterEmployees() {
+            const term = document.getElementById('searchBar').value.toLowerCase();
+            const filtered = allEmployees.filter(emp => 
+                emp.name.toLowerCase().includes(term) || 
+                emp.role.toLowerCase().includes(term)
+            );
+            renderList(filtered);
+        }
+
+        async function addEmployee() {
+            const name = document.getElementById('name').value;
+            const role = document.getElementById('role').value;
+            if(!name || !role) return alert("Please fill both fields");
+
+            await fetch('/employees', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, role })
+            });
+            document.getElementById('name').value = '';
+            document.getElementById('role').value = '';
+            loadEmployees();
+        }
+
+        async function deleteEmployee(id) {
+            if(confirm("Delete this employee?")) {
+                await fetch(`/employees/${id}`, { method: 'DELETE' });
+                loadEmployees();
+            }
+        }
+
+        loadEmployees();
+    </script>
+</body>
+</html>
