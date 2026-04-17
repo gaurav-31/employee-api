@@ -9,9 +9,15 @@ const DATA_FILE = './data.json';
 
 // Helper function to read data from the file
 const readData = () => {
+    // Check if the file exists first
+    if (!fs.existsSync(DATA_FILE)) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify([])); // Create it if missing
+        return [];
+    }
     const jsonData = fs.readFileSync(DATA_FILE);
     return JSON.parse(jsonData);
 };
+
 
 // Helper function to write data to the file
 const writeData = (data) => {
